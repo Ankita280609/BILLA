@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const cors = require('cors');
+const cors = require('cors'); // This is already here, good!
 
 // Load environment variables
 dotenv.config();
@@ -9,8 +9,28 @@ dotenv.config();
 const app = express();
 
 // --- Middleware ---
-// Enable CORS for all routes
-app.use(cors()); 
+
+// --- THIS IS YOUR FINAL CORS CONFIGURATION ---
+const allowedOrigins = [
+  'http://localhost:3000', // Your local React URL
+  'https://billa-pi.vercel.app' // <-- Your Vercel URL is now included!
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+}));
+// --- END OF CORS CONFIGURATION ---
+
+
 // Parse JSON request bodies
 app.use(express.json()); 
 
