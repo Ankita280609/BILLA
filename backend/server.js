@@ -13,7 +13,9 @@ const app = express();
 // --- THIS IS YOUR FINAL CORS CONFIGURATION ---
 const allowedOrigins = [
   'http://localhost:3000', // Your local React URL
-  'https://billa-pi.vercel.app' // <-- Your Vercel URL is now included!
+  'https://billa-pi.vercel.app',
+  'https://billa-eja4jfcnj-ankitathakur2024-9424s-projects.vercel.app'
+  
 ];
 
 app.use(cors({
