@@ -5,7 +5,8 @@ import api from '../services/api';
 import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard';
 import SubscriptionForm from '../components/dashboard/SubscriptionForm';
 import SubscriptionItem from '../components/dashboard/SubscriptionItem';
-import { PlusIcon, EnvelopeIcon } from '@heroicons/react/24/solid'; // Import EnvelopeIcon
+import UnpaidBillsModal from '../components/dashboard/UnpaidBillsModal';
+import { PlusIcon, EnvelopeIcon } from '@heroicons/react/24/solid';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -16,10 +17,13 @@ const Dashboard = () => {
 
   // State for the form modal
   const [showForm, setShowForm] = useState(false);
-  const [editingSub, setEditingSub] = useState(null); // The subscription to edit
+  const [editingSub, setEditingSub] = useState(null);
 
-  // --- New state for email button ---
+  // State for email button
   const [emailLoading, setEmailLoading] = useState(false);
+
+  // State for unpaid bills modal
+  const [showUnpaidModal, setShowUnpaidModal] = useState(false);
 
 
   // --- Data Fetching Function ---
@@ -48,6 +52,32 @@ const Dashboard = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Show unpaid bills modal when data loads (only for Monthly subscriptions)
+  useEffect(() => {
+    if (!loading && subscriptions.length > 0) {
+      const unpaid = subscriptions.filter(sub =>
+        sub.billingCycle === 'Monthly' && !isSubPaidThisMonth(sub)
+      );
+      if (unpaid.length > 0) {
+        setShowUnpaidModal(true);
+      }
+    }
+  }, [loading, subscriptions]);
+
+  // Helper function to check if subscription is paid this month
+  const isSubPaidThisMonth = (sub) => {
+    if (sub.billingCycle !== 'Monthly') return true;
+    if (!sub.lastPaidDate) return false;
+
+    const paidDate = new Date(sub.lastPaidDate);
+    const now = new Date();
+
+    return (
+      paidDate.getMonth() === now.getMonth() &&
+      paidDate.getFullYear() === now.getFullYear()
+    );
+  };
 
   // --- Handler Functions ---
   const openForm = (sub = null) => {
@@ -188,6 +218,17 @@ const Dashboard = () => {
           subscription={editingSub}
           onSave={handleSave}
           onClose={closeForm}
+        />
+      )}
+
+      {/* Unpaid Bills Modal */}
+      {showUnpaidModal && (
+        <UnpaidBillsModal
+          unpaidBills={subscriptions.filter(sub =>
+            sub.billingCycle === 'Monthly' && !isSubPaidThisMonth(sub)
+          )}
+          onClose={() => setShowUnpaidModal(false)}
+          onMarkAsPaid={handleMarkAsPaid}
         />
       )}
     </div>

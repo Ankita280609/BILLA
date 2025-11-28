@@ -99,8 +99,25 @@ router.get('/summary', async (req, res) => {
     const totalMonthlyCost = monthlyTotal.length > 0 ? monthlyTotal[0].total : 0;
     const totalYearlyCost = yearlyTotal.length > 0 ? yearlyTotal[0].total : 0;
 
-    // Annualized Total = (Monthly * 12) + Yearly
-    const annualizedYearlyTotal = (totalMonthlyCost * 12) + totalYearlyCost;
+    // Get one-time payments total
+    const oneTimeTotal = await Subscription.aggregate([
+      {
+        $match: {
+          user: userId,
+          billingCycle: 'One-time',
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$cost' }
+        }
+      }
+    ]);
+    const totalOneTime = oneTimeTotal.length > 0 ? oneTimeTotal[0].total : 0;
+
+    // Annualized Total = (Monthly * 12) + Yearly + One-time
+    const annualizedYearlyTotal = (totalMonthlyCost * 12) + totalYearlyCost + totalOneTime;
 
     const totalPaid = paidMonthly.length > 0 ? paidMonthly[0].total : 0;
     const totalUnpaid = totalMonthlyCost - totalPaid;

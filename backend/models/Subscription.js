@@ -18,14 +18,12 @@ const SubscriptionSchema = new mongoose.Schema({
   },
   billingCycle: {
     type: String,
+    enum: ['Monthly', 'Yearly', 'One-time'],
     required: true,
-    enum: ['Monthly', 'Yearly', 'One-Time'],
-    default: 'Monthly',
   },
   category: {
     type: String,
-    required: [true, 'Please add a category'],
-    trim: true,
+    required: true,
     default: 'General',
   },
   startDate: {
@@ -35,6 +33,16 @@ const SubscriptionSchema = new mongoose.Schema({
   lastPaidDate: {
     type: Date,
     default: null,
+  },
+  dueDate: {
+    type: Date,
+    default: null, // For one-time payments
+  },
+  dueDayOfMonth: {
+    type: Number,
+    min: 1,
+    max: 31,
+    default: null, // For recurring payments (1-31)
   },
   createdAt: {
     type: Date,
