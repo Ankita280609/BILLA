@@ -74,4 +74,4 @@ const UnpaidBillsModal = ({ unpaidBills, onClose, onMarkAsPaid }) => {
     );
 };
 
-export default UnpaidBills Modal;
+export default UnpaidBillsModal;
