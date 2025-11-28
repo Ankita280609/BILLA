@@ -15,14 +15,15 @@ const allowedOrigins = [
   'http://localhost:3000', // Your local React URL
   'https://billa-pi.vercel.app',
   'https://billa-eja4jfcnj-ankitathakur2024-9424s-projects.vercel.app'
-  
 ];
+
+console.log('BILLA Backend: Allowed CORS Origins:', allowedOrigins);
 
 app.use(cors({
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
@@ -34,7 +35,7 @@ app.use(cors({
 
 
 // Parse JSON request bodies
-app.use(express.json()); 
+app.use(express.json());
 
 // --- Database Connection ---
 const connectDB = async () => {
@@ -59,7 +60,7 @@ app.use('/api/auth', require('./routes/auth'));
 // Define subscription routes
 app.use('/api/subscriptions', require('./routes/subscriptions'));
 // Define analytics routes
-app.use('/api/analytics', require('./routes/analytics')); 
+app.use('/api/analytics', require('./routes/analytics'));
 // Define notification routes
 app.use('/api/notify', require('./routes/notify'));
 
