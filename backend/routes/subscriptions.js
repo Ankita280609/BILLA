@@ -9,7 +9,7 @@ router.use(protect);
 
 router.post('/', async (req, res) => {
   try {
-    const { name, cost, billingCycle, category, startDate } = req.body;
+    const { name, cost, billingCycle, category, startDate, dueDate, dueDayOfMonth } = req.body;
 
     const newSubscription = new Subscription({
       name,
@@ -17,6 +17,8 @@ router.post('/', async (req, res) => {
       billingCycle,
       category,
       startDate,
+      dueDate: dueDate || null,
+      dueDayOfMonth: dueDayOfMonth || null,
       user: req.user.id,
     });
 
@@ -75,13 +77,15 @@ router.put('/:id', async (req, res) => {
     if (subscription.user.toString() !== req.user.id) {
       return res.status(401).json({ msg: 'Not authorized' });
     }
-    const { name, cost, billingCycle, category, startDate } = req.body;
+    const { name, cost, billingCycle, category, startDate, dueDate, dueDayOfMonth } = req.body;
     const updatedFields = {
       name: name || subscription.name,
-      cost: cost || subscription.cost,
+      cost: cost !== undefined ? cost : subscription.cost,
       billingCycle: billingCycle || subscription.billingCycle,
       category: category || subscription.category,
       startDate: startDate || subscription.startDate,
+      dueDate: dueDate !== undefined ? dueDate : subscription.dueDate,
+      dueDayOfMonth: dueDayOfMonth !== undefined ? dueDayOfMonth : subscription.dueDayOfMonth,
     };
 
     subscription = await Subscription.findByIdAndUpdate(
