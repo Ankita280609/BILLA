@@ -99,15 +99,15 @@ const AnalyticsDashboard = ({ data }) => {
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-4">Subscription Count</h3>
+          <h3 className="text-xl font-semibold mb-4">Total Cost by Category</h3>
           <div className="h-64 md:h-80 flex justify-center items-center">
             {data.byCategory.length > 0 ? (
               <Bar
                 data={{
                   labels: data.byCategory.map(c => c.category),
                   datasets: [{
-                    label: 'Count',
-                    data: data.byCategory.map(c => c.count),
+                    label: 'Total Cost',
+                    data: data.byCategory.map(c => c.totalCost),
                     backgroundColor: 'rgba(54, 162, 235, 0.6)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1

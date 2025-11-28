@@ -97,13 +97,18 @@ router.get('/summary', async (req, res) => {
     ]);
 
     const totalMonthlyCost = monthlyTotal.length > 0 ? monthlyTotal[0].total : 0;
+    const totalYearlyCost = yearlyTotal.length > 0 ? yearlyTotal[0].total : 0;
+
+    // Annualized Total = (Monthly * 12) + Yearly
+    const annualizedYearlyTotal = (totalMonthlyCost * 12) + totalYearlyCost;
+
     const totalPaid = paidMonthly.length > 0 ? paidMonthly[0].total : 0;
     const totalUnpaid = totalMonthlyCost - totalPaid;
 
     res.json({
       byCategory: categorySummary,
       totalMonthly: totalMonthlyCost,
-      totalYearly: yearlyTotal.length > 0 ? yearlyTotal[0].total : 0,
+      totalYearly: annualizedYearlyTotal,
       totalPaid: totalPaid,
       totalUnpaid: totalUnpaid,
       totalSubscriptions: await Subscription.countDocuments({ user: userId }),

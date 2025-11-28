@@ -73,7 +73,7 @@ const SubscriptionItem = ({ subscription, onEdit, onDelete, onMarkAsPaid }) => {
             title="Mark as Paid"
           >
             <CurrencyDollarIcon className="h-4 w-4 mr-1" />
-            Pay
+            Paid
           </button>
         )}
 
