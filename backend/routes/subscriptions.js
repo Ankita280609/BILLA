@@ -110,7 +110,7 @@ router.delete('/:id', async (req, res) => {
       return res.status(401).json({ msg: 'Not authorized' });
     }
 
-    await Subscription.findByIdAndRemove(req.params.id);
+    await Subscription.findByIdAndDelete(req.params.id);
 
     res.json({ msg: 'Subscription removed' });
   } catch (err) {
