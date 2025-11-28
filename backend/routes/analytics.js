@@ -15,21 +15,21 @@ router.get('/summary', async (req, res) => {
       { $match: { user: userId } }, // Filter by the logged-in user
       {
         $group: {
-          _id: '$category', 
-          totalCost: { $sum: '$cost' }, 
-          count: { $sum: 1 }, 
+          _id: '$category',
+          totalCost: { $sum: '$cost' },
+          count: { $sum: 1 },
         },
       },
       {
         $project: {
-      
+
           _id: 0,
           category: '$_id',
           totalCost: 1,
           count: 1,
         },
       },
-      { $sort: { totalCost: -1 } }, 
+      { $sort: { totalCost: -1 } },
     ]);
 
 
@@ -42,7 +42,7 @@ router.get('/summary', async (req, res) => {
       },
       {
         $group: {
-          _id: null, 
+          _id: null,
           total: { $sum: '$cost' },
         },
       },
@@ -53,7 +53,7 @@ router.get('/summary', async (req, res) => {
         },
       },
     ]);
-    
+
     const yearlyTotal = await Subscription.aggregate([
       {
         $match: {
@@ -67,7 +67,7 @@ router.get('/summary', async (req, res) => {
           total: { $sum: '$cost' },
         },
       },
-       {
+      {
         $project: {
           _id: 0,
           total: 1,
@@ -75,10 +75,37 @@ router.get('/summary', async (req, res) => {
       },
     ]);
 
+    // Calculate Paid vs Unpaid for current month (Monthly subscriptions only)
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const paidMonthly = await Subscription.aggregate([
+      {
+        $match: {
+          user: userId,
+          billingCycle: 'Monthly',
+          lastPaidDate: { $gte: startOfMonth, $lte: endOfMonth }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$cost' }
+        }
+      }
+    ]);
+
+    const totalMonthlyCost = monthlyTotal.length > 0 ? monthlyTotal[0].total : 0;
+    const totalPaid = paidMonthly.length > 0 ? paidMonthly[0].total : 0;
+    const totalUnpaid = totalMonthlyCost - totalPaid;
+
     res.json({
       byCategory: categorySummary,
-      totalMonthly: monthlyTotal.length > 0 ? monthlyTotal[0].total : 0,
+      totalMonthly: totalMonthlyCost,
       totalYearly: yearlyTotal.length > 0 ? yearlyTotal[0].total : 0,
+      totalPaid: totalPaid,
+      totalUnpaid: totalUnpaid,
       totalSubscriptions: await Subscription.countDocuments({ user: userId }),
     });
   } catch (err) {

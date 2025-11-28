@@ -17,7 +17,7 @@ const Dashboard = () => {
   // State for the form modal
   const [showForm, setShowForm] = useState(false);
   const [editingSub, setEditingSub] = useState(null); // The subscription to edit
-  
+
   // --- New state for email button ---
   const [emailLoading, setEmailLoading] = useState(false);
 
@@ -27,13 +27,13 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       // Fetch subscriptions and analytics in parallel
       const [subsResponse, analyticsResponse] = await Promise.all([
         api.get('/subscriptions'),
         api.get('/analytics/summary')
       ]);
-      
+
       setSubscriptions(subsResponse.data);
       setAnalytics(analyticsResponse.data);
     } catch (err) {
@@ -71,7 +71,7 @@ const Dashboard = () => {
         // Create new subscription
         await api.post('/subscriptions', subData);
       }
-      
+
       // Refresh all data, close form, and clear editing state
       fetchData();
       closeForm();
@@ -80,7 +80,7 @@ const Dashboard = () => {
       alert('Failed to save. Please try again.'); // Simple error handling
     }
   };
-  
+
   // This function is passed to the SubscriptionItem
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this subscription?')) {
@@ -93,7 +93,7 @@ const Dashboard = () => {
       }
     }
   };
-  
+
   // --- New handler for sending test email ---
   const handleTestEmail = async () => {
     setEmailLoading(true);
@@ -109,11 +109,22 @@ const Dashboard = () => {
     }
   };
 
+  // --- New handler for marking as paid ---
+  const handleMarkAsPaid = async (id) => {
+    try {
+      await api.put(`/subscriptions/${id}/pay`);
+      fetchData(); // Refresh data to update UI and analytics
+    } catch (err) {
+      console.error('Failed to mark as paid:', err);
+      alert('Failed to mark as paid. Please try again.');
+    }
+  };
+
   // --- Render Logic ---
   if (loading) {
     return <div className="text-center p-10 text-xl">Loading Dashboard...</div>;
   }
-  
+
   if (error) {
     return <div className="text-center p-10 text-xl text-red-500">{error}</div>;
   }
@@ -139,7 +150,7 @@ const Dashboard = () => {
               <EnvelopeIcon className="h-5 w-5" />
               <span>{emailLoading ? 'Sending...' : 'Test Email'}</span>
             </button>
-            
+
             {/* Add New Button */}
             <button
               onClick={() => openForm()}
@@ -155,11 +166,12 @@ const Dashboard = () => {
         <div className="space-y-4">
           {subscriptions.length > 0 ? (
             subscriptions.map(sub => (
-              <SubscriptionItem 
-                key={sub._id} 
+              <SubscriptionItem
+                key={sub._id}
                 subscription={sub}
                 onEdit={() => openForm(sub)}
                 onDelete={() => handleDelete(sub._id)}
+                onMarkAsPaid={() => handleMarkAsPaid(sub._id)}
               />
             ))
           ) : (
@@ -169,7 +181,7 @@ const Dashboard = () => {
           )}
         </div>
       </div>
-      
+
       {/* Add/Edit Form Modal */}
       {showForm && (
         <SubscriptionForm

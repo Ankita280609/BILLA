@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
       billingCycle,
       category,
       startDate,
-      user: req.user.id, 
+      user: req.user.id,
     });
 
     const subscription = await newSubscription.save();
@@ -87,7 +87,7 @@ router.put('/:id', async (req, res) => {
     subscription = await Subscription.findByIdAndUpdate(
       req.params.id,
       { $set: updatedFields },
-      { new: true } 
+      { new: true }
     );
 
     res.json(subscription);
@@ -113,6 +113,32 @@ router.delete('/:id', async (req, res) => {
     await Subscription.findByIdAndRemove(req.params.id);
 
     res.json({ msg: 'Subscription removed' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   PUT api/subscriptions/:id/pay
+// @desc    Mark subscription as paid for current cycle
+// @access  Private
+router.put('/:id/pay', async (req, res) => {
+  try {
+    let subscription = await Subscription.findById(req.params.id);
+
+    if (!subscription) {
+      return res.status(404).json({ msg: 'Subscription not found' });
+    }
+
+    // Make sure user owns subscription
+    if (subscription.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized' });
+    }
+
+    subscription.lastPaidDate = Date.now();
+    await subscription.save();
+
+    res.json(subscription);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
