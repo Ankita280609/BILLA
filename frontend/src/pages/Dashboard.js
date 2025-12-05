@@ -6,7 +6,7 @@ import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard';
 import SubscriptionForm from '../components/dashboard/SubscriptionForm';
 import SubscriptionItem from '../components/dashboard/SubscriptionItem';
 import UnpaidBillsModal from '../components/dashboard/UnpaidBillsModal';
-import { PlusIcon, EnvelopeIcon } from '@heroicons/react/24/solid';
+import { PlusIcon, EnvelopeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -151,63 +151,121 @@ const Dashboard = () => {
   };
 
   // --- Render Logic ---
-  if (loading) {
-    return <div className="text-center p-10 text-xl">Loading Dashboard...</div>;
+  if (loading && !analytics) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-dark-bg">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center p-10 text-xl text-red-500">{error}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-dark-bg">
+        <div className="text-center p-10 bg-white dark:bg-slate-800 rounded-2xl shadow-xl">
+          <div className="text-red-500 text-xl mb-4">Error Loading Dashboard</div>
+          <p className="text-slate-600 dark:text-slate-400 mb-6">{error}</p>
+          <button
+            onClick={fetchData}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-4xl font-bold">Welcome, {user?.name}!</h1>
+    <div className="space-y-8 pb-12 animate-fade-in">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            Welcome back, <span className="text-gradient">{user?.name}</span>
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
+            Here's what's happening with your subscriptions today.
+          </p>
+        </div>
+
+        <div className="flex space-x-3">
+          <button
+            onClick={fetchData}
+            className="p-2 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-white dark:hover:bg-slate-800 transition-all"
+            title="Refresh Data"
+          >
+            <ArrowPathIcon className={`h-6 w-6 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+
+          <button
+            onClick={handleTestEmail}
+            disabled={emailLoading}
+            className="glass dark:glass-dark px-4 py-2 rounded-xl text-slate-700 dark:text-slate-200 font-medium hover:bg-white/20 transition-all flex items-center space-x-2 disabled:opacity-50"
+          >
+            <EnvelopeIcon className="h-5 w-5" />
+            <span className="hidden sm:inline">{emailLoading ? 'Sending...' : 'Test Email'}</span>
+          </button>
+
+          <button
+            onClick={() => openForm()}
+            className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg shadow-primary-500/30 hover:shadow-primary-500/50 transition-all hover:-translate-y-0.5 flex items-center space-x-2"
+          >
+            <PlusIcon className="h-5 w-5" />
+            <span>Add Subscription</span>
+          </button>
+        </div>
+      </div>
 
       {/* Analytics Section */}
-      {analytics && <AnalyticsDashboard data={analytics} />}
+      {analytics && (
+        <div className="animate-slide-up">
+          <AnalyticsDashboard data={analytics} />
+        </div>
+      )}
 
       {/* Subscriptions List Section */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Your Subscriptions ({subscriptions.length})</h2>
-          <div className="flex space-x-2">
-            {/* Test Email Button */}
-            <button
-              onClick={handleTestEmail}
-              disabled={emailLoading}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg flex items-center space-x-2 disabled:opacity-50"
-            >
-              <EnvelopeIcon className="h-5 w-5" />
-              <span>{emailLoading ? 'Sending...' : 'Test Email'}</span>
-            </button>
-
-            {/* Add New Button */}
-            <button
-              onClick={() => openForm()}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg flex items-center space-x-2"
-            >
-              <PlusIcon className="h-5 w-5" />
-              <span>Add New</span>
-            </button>
-          </div>
+      <div className="glass dark:glass-dark rounded-2xl p-6 md:p-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
+            Your Subscriptions
+            <span className="ml-3 px-3 py-1 text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full">
+              {subscriptions.length}
+            </span>
+          </h2>
         </div>
 
         {/* List */}
         <div className="space-y-4">
           {subscriptions.length > 0 ? (
-            subscriptions.map(sub => (
-              <SubscriptionItem
-                key={sub._id}
-                subscription={sub}
-                onEdit={() => openForm(sub)}
-                onDelete={() => handleDelete(sub._id)}
-                onMarkAsPaid={() => handleMarkAsPaid(sub._id)}
-              />
-            ))
+            <div className="grid grid-cols-1 gap-4">
+              {subscriptions.map((sub, index) => (
+                <div key={sub._id} className="animate-slide-up" style={{ animationDelay: `${0.1 + (index * 0.05)}s` }}>
+                  <SubscriptionItem
+                    subscription={sub}
+                    onEdit={() => openForm(sub)}
+                    onDelete={() => handleDelete(sub._id)}
+                    onMarkAsPaid={() => handleMarkAsPaid(sub._id)}
+                  />
+                </div>
+              ))}
+            </div>
           ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-              You haven't added any subscriptions yet.
-            </p>
+            <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <PlusIcon className="h-8 w-8 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No subscriptions yet</h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto">
+                Add your first subscription to start tracking your expenses and get notified about upcoming payments.
+              </p>
+              <button
+                onClick={() => openForm()}
+                className="text-primary-600 font-medium hover:text-primary-700 hover:underline"
+              >
+                Add your first subscription
+              </button>
+            </div>
           )}
         </div>
       </div>
