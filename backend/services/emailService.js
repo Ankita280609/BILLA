@@ -1,12 +1,12 @@
-const { Resend } = require('resend');
+const sgMail = require('@sendgrid/mail');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 /**
- * Sends an email using Resend.
+ * Sends an email using SendGrid.
  * @param {string} to - The recipient's email address.
  * @param {string} subject - The subject line of the email.
  * @param {string} text - Plain text version of the email.
@@ -14,18 +14,23 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  */
 const sendEmail = async ({ to, subject, text, html }) => {
   try {
-    const data = await resend.emails.send({
-      from: 'BILLA <onboarding@resend.dev>', // Use Resend's test domain or your verified domain
+    const msg = {
       to: to,
+      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@billa.com', // Use verified sender email
       subject: subject,
-      html: html || text, // Resend prefers HTML, fallback to text
-    });
+      text: text,
+      html: html,
+    };
 
-    console.log('Email sent successfully:', data);
-    return data;
+    const response = await sgMail.send(msg);
+    console.log('Email sent successfully:', response[0].statusCode);
+    return response;
 
   } catch (error) {
     console.error('Error sending email:', error);
+    if (error.response) {
+      console.error('SendGrid error details:', error.response.body);
+    }
     throw error; // Re-throw the error so the caller can handle it
   }
 };
