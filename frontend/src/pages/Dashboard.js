@@ -6,7 +6,7 @@ import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard';
 import SubscriptionForm from '../components/dashboard/SubscriptionForm';
 import SubscriptionItem from '../components/dashboard/SubscriptionItem';
 import UnpaidBillsModal from '../components/dashboard/UnpaidBillsModal';
-import { PlusIcon, EnvelopeIcon, ArrowPathIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, EnvelopeIcon, ArrowPathIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -24,8 +24,10 @@ const Dashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingSub, setEditingSub] = useState(null);
 
-  // State for email button
-  const [emailLoading, setEmailLoading] = useState(false);
+  // State for Query Modal
+  const [showQueryModal, setShowQueryModal] = useState(false);
+  const [queryText, setQueryText] = useState('');
+  const [queryLoading, setQueryLoading] = useState(false);
 
   // State for unpaid bills modal
   const [showUnpaidModal, setShowUnpaidModal] = useState(false);
@@ -144,18 +146,22 @@ const Dashboard = () => {
     }
   };
 
-  // --- New handler for sending test email ---
-  const handleTestEmail = async () => {
-    setEmailLoading(true);
+  // --- Handler for sending query ---
+  const handleSendQuery = async (e) => {
+    e.preventDefault();
+    if (!queryText.trim()) return;
+
+    setQueryLoading(true);
     try {
-      // Call the new backend endpoint
-      await api.post('/notify/test');
-      alert('Test email sent! Check your Ethereal inbox (and the backend console for the link).');
+      await api.post('/notify/query', { query: queryText });
+      alert('Your query has been sent successfully!');
+      setQueryText('');
+      setShowQueryModal(false);
     } catch (err) {
-      console.error('Failed to send test email:', err);
-      alert('Failed to send test email. See console for details.');
+      console.error('Failed to send query:', err);
+      alert('Failed to send query. Please try again.');
     } finally {
-      setEmailLoading(false);
+      setQueryLoading(false);
     }
   };
 
@@ -219,12 +225,11 @@ const Dashboard = () => {
           </button>
 
           <button
-            onClick={handleTestEmail}
-            disabled={emailLoading}
-            className="glass dark:glass-dark px-4 py-2 rounded-xl text-slate-700 dark:text-slate-200 font-medium hover:bg-white/20 transition-all flex items-center space-x-2 disabled:opacity-50"
+            onClick={() => setShowQueryModal(true)}
+            className="glass dark:glass-dark px-4 py-2 rounded-xl text-slate-700 dark:text-slate-200 font-medium hover:bg-white/20 transition-all flex items-center space-x-2"
           >
             <EnvelopeIcon className="h-5 w-5" />
-            <span className="hidden sm:inline">{emailLoading ? 'Sending...' : 'Test Email'}</span>
+            <span className="hidden sm:inline">Send Query</span>
           </button>
 
           <button
@@ -333,6 +338,62 @@ const Dashboard = () => {
           onClose={() => setShowUnpaidModal(false)}
           onMarkAsPaid={handleMarkAsPaid}
         />
+      )}
+
+      {/* Query Modal */}
+      {showQueryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 animate-scale-in">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Send Query</h3>
+              <button
+                onClick={() => setShowQueryModal(false)}
+                className="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendQuery}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Your Message
+                </label>
+                <textarea
+                  value={queryText}
+                  onChange={(e) => setQueryText(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none h-32"
+                  placeholder="Type your query or feedback here..."
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowQueryModal(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={queryLoading}
+                  className="px-4 py-2 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                >
+                  {queryLoading ? (
+                    'Sending...'
+                  ) : (
+                    <>
+                      <span>Send</span>
+                      <PaperAirplaneIcon className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
