@@ -43,16 +43,26 @@ const Dashboard = () => {
         api.get('/analytics/summary')
       ]);
 
-      // Handle paginated response
-      setSubscriptions(subsResponse.data.subscriptions);
-      setCurrentPage(subsResponse.data.currentPage);
-      setTotalPages(subsResponse.data.totalPages);
-      setTotalSubscriptions(subsResponse.data.totalSubscriptions);
+      // Handle paginated response safely
+      if (subsResponse.data && Array.isArray(subsResponse.data.subscriptions)) {
+        // New paginated format
+        setSubscriptions(subsResponse.data.subscriptions);
+        setCurrentPage(subsResponse.data.currentPage || 1);
+        setTotalPages(subsResponse.data.totalPages || 1);
+        setTotalSubscriptions(subsResponse.data.totalSubscriptions || 0);
+      } else if (Array.isArray(subsResponse.data)) {
+        // Fallback for old format (array only)
+        setSubscriptions(subsResponse.data);
+        setTotalSubscriptions(subsResponse.data.length);
+      } else {
+        setSubscriptions([]);
+      }
 
       setAnalytics(analyticsResponse.data);
     } catch (err) {
       setError('Failed to fetch data. Please try again.');
       console.error(err);
+      setSubscriptions([]); // Ensure it's an array on error
     } finally {
       setLoading(false);
     }
@@ -65,7 +75,7 @@ const Dashboard = () => {
 
   // Show unpaid bills modal when data loads (only for Monthly subscriptions)
   useEffect(() => {
-    if (!loading && subscriptions.length > 0) {
+    if (!loading && subscriptions && subscriptions.length > 0) {
       const unpaid = subscriptions.filter(sub =>
         sub.billingCycle === 'Monthly' && !isSubPaidThisMonth(sub)
       );
@@ -247,7 +257,7 @@ const Dashboard = () => {
 
         {/* List */}
         <div className="space-y-4">
-          {subscriptions.length > 0 ? (
+          {subscriptions && subscriptions.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
               {subscriptions.map((sub, index) => (
                 <div key={sub._id} className="animate-slide-up" style={{ animationDelay: `${0.1 + (index * 0.05)}s` }}>
