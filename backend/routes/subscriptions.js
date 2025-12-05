@@ -33,11 +33,23 @@ router.post('/', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    const subscriptions = await Subscription.find({ user: req.user.id }).sort({
-      createdAt: -1,
+    const subscriptions = await Subscription.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Subscription.countDocuments({ user: req.user.id });
+
+    res.json({
+      subscriptions,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalSubscriptions: total,
     });
-    res.json(subscriptions);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

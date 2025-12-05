@@ -15,7 +15,7 @@ function App() {
     <ThemeProvider>
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
         <Navbar />
-        <main className="container mx-auto p-4">
+        <main className="container mx-auto px-4 pb-4 pt-24">
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
